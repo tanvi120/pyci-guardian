@@ -10,7 +10,7 @@ def main():
 
     # Step 1: Git diff
     diff = get_git_diff()
-
+    print("📄 Diff content:\n", diff[:500])
     if not diff.strip():
         print("No changes detected.")
         return
