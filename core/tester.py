@@ -4,7 +4,7 @@ import subprocess
 def run_tests():
     try:
         result = subprocess.run(
-            ["pytest"],
+            ["python3", "-m", "pytest"],
             capture_output=True,
             text=True
         )
