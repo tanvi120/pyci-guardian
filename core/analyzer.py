@@ -14,7 +14,7 @@ def analyze_error(log: str):
     if "FileNotFoundError" in log:
         return "file_error"
 
-    if "NameError" in log:
+    if "NameError" in log or "not defined" in log:
         return "name_error"
 
     return "unknown"

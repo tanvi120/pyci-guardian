@@ -3,34 +3,34 @@ from core.reviewer import review_diff
 from core.tester import run_tests
 from core.analyzer import analyze_error
 from core.fixer import generate_fix
+from core.utils import extract_file_from_diff
+from core.apply_fix import apply_fix_to_file
+import subprocess
 
 
 def main():
     print("🚀 PyCI Guardian Started\n")
 
-    # Step 1: Git diff
+    # Step 1: Diff
     diff = get_git_diff()
-    print("📄 Diff content:\n", diff[:500])
+    print("📄 Diff:\n", diff)
+
     if not diff.strip():
         print("No changes detected.")
         return
 
-    print("📄 Diff detected\n")
+    print("\n📄 Diff detected\n")
 
     # Step 2: Review
     issues, ai_review = review_diff(diff)
 
-    print("🔍 Rule-Based Issues:")
-    if issues:
-        for issue in issues:
-            print(f"❌ {issue}")
-    else:
-        print("✅ No rule issues")
+    print("🔍 Issues:")
+    for i in issues:
+        print(f"❌ {i}")
 
-    print("\n🤖 AI Review:")
-    print(ai_review)
+    print("\n🤖 AI Review:\n", ai_review)
 
-    # Step 3: Run tests
+    # Step 3: Test
     print("\n🧪 Running tests...")
     result = run_tests()
 
@@ -41,24 +41,37 @@ def main():
     print("❌ Tests Failed")
 
     print("\n--- ERROR LOG ---")
-    print(result["output"][:500])
+    print(result["output"])
 
     # Step 4: Analyze
     error_type = analyze_error(result["output"])
     print(f"\n🧠 Error Type: {error_type}")
 
-    # Step 5: Fix suggestion
-    fix = generate_fix(diff, result["output"])
+    # Step 5: Fix
+    code, full_response = generate_fix(diff, result["output"])
 
-    print("\n🔧 Suggested Fix:\n")
-    print(fix)
+    print("\n🔧 AI Fix Suggestion:\n")
+    print(full_response)
 
-    # Step 6: Create branch
-    user_input = input("\nCreate fix branch? (y/n): ")
+    if code:
+        user_input = input("\nApply fix automatically? (y/n): ")
 
-    if user_input.lower() == "y":
-        create_fix_branch()
-        print("✅ Created branch: fix/auto-fix")
+        if user_input.lower() == "y":
+            file_path = extract_file_from_diff(diff)
+
+            if file_path:
+                apply_fix_to_file(file_path, code)
+            else:
+                print("❌ Could not detect file to fix")
+            create_fix_branch()
+
+            subprocess.run(["git", "add", "."])
+            subprocess.run(["git", "commit", "-m", "auto fix applied"])
+
+            print("🚀 Auto fix committed!")
+
+    else:
+        print("⚠️ No valid code block found")
 
 
 if __name__ == "__main__":

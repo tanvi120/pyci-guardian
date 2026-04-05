@@ -1,16 +1,10 @@
 import subprocess
 
 
-def get_git_diff(base_branch="master"):
+def get_git_diff():
     try:
         committed = subprocess.run(
-            ["git", "diff", f"{base_branch}...HEAD"],
-            capture_output=True,
-            text=True
-        ).stdout
-
-        staged = subprocess.run(
-            ["git", "diff", "--cached"],
+            ["git", "diff", "HEAD~1", "HEAD"],
             capture_output=True,
             text=True
         ).stdout
@@ -21,7 +15,7 @@ def get_git_diff(base_branch="master"):
             text=True
         ).stdout
 
-        return committed + staged + unstaged
+        return committed + unstaged
 
     except Exception as e:
         print("Git diff error:", e)
@@ -31,5 +25,6 @@ def get_git_diff(base_branch="master"):
 def create_fix_branch(branch_name="fix/auto-fix"):
     try:
         subprocess.run(["git", "checkout", "-b", branch_name])
+        print(f"✅ Created branch: {branch_name}")
     except Exception as e:
-        print("Branch creation failed:", e)
+        print("❌ Branch creation failed:", e)
